@@ -6,7 +6,8 @@ import ItemList from '../utils/ItemList';
 import computed from '../utils/computed';
 import GroupBadge from '../components/GroupBadge';
 
-export default class User extends Model {}
+export default class User extends Model {
+}
 
 Object.assign(User.prototype, {
   username: Model.attribute('username'),
@@ -27,12 +28,19 @@ Object.assign(User.prototype, {
 
   discussionCount: Model.attribute('discussionCount'),
   commentCount: Model.attribute('commentCount'),
-
-  canEdit: Model.attribute('canEdit'),
+  canEditUsername: Model.attribute('canEditUsername'),
+  canEditCredentials: Model.attribute('canEditCredentials'),
+  canEditGroups: Model.attribute('canEditGroups'),
   canDelete: Model.attribute('canDelete'),
+  canEdit: computed('canEditUsername', 'canEditCredentials', 'canEditGroups', function (canEditUsername, canEditCredentials, canEditGroups) {
+    console.log('Credentials: ' + canEditCredentials);
+    console.log('Groups: ' + canEditGroups);
+    console.log('Username: ' + canEditUsername);
+    return (canEditCredentials || canEditGroups || canEditUsername);
+  }),
 
   avatarColor: null,
-  color: computed('username', 'avatarUrl', 'avatarColor', function(username, avatarUrl, avatarColor) {
+  color: computed('username', 'avatarUrl', 'avatarColor', function (username, avatarUrl, avatarColor) {
     // If we've already calculated and cached the dominant color of the user's
     // avatar, then we can return that in RGB format. If we haven't, we'll want
     // to calculate it. Unless the user doesn't have an avatar, in which case
@@ -85,7 +93,7 @@ Object.assign(User.prototype, {
     const image = new Image();
     const user = this;
 
-    image.onload = function() {
+    image.onload = function () {
       const colorThief = new ColorThief();
       user.avatarColor = colorThief.getColor(this);
       user.freshness = new Date();

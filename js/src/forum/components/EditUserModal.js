@@ -47,13 +47,16 @@ export default class EditUserModal extends Modal {
   fields() {
     const items = new ItemList();
 
-    items.add('username', <div className="Form-group">
-      <label>{app.translator.trans('core.forum.edit_user.username_heading')}</label>
-      <input className="FormControl" placeholder={extractText(app.translator.trans('core.forum.edit_user.username_label'))}
+    if (app.session.user.canEditUsername()) {
+      items.add('username', <div className="Form-group">
+        <label>{app.translator.trans('core.forum.edit_user.username_heading')}</label>
+        <input className="FormControl" placeholder={extractText(app.translator.trans('core.forum.edit_user.username_label'))}
              bidi={this.username} />
-    </div>, 40);
+      </div>, 40);
+    }
 
-    if (app.session.user !== this.props.user) {
+    // The first part prevents silent account hijacking
+    if (app.session.user !== this.props.user && app.session.user.canEditCredentials()) {
       items.add('email', <div className="Form-group">
         <label>{app.translator.trans('core.forum.edit_user.email_heading')}</label>
         <div>
@@ -92,24 +95,25 @@ export default class EditUserModal extends Modal {
           ) : ''}
         </div>
       </div>, 20);
-
     }
 
-    items.add('groups', <div className="Form-group EditUserModal-groups">
-      <label>{app.translator.trans('core.forum.edit_user.groups_heading')}</label>
-      <div>
-        {Object.keys(this.groups)
-          .map(id => app.store.getById('groups', id))
-          .map(group => (
-            <label className="checkbox">
-              <input type="checkbox"
+    if (app.session.user.canEditGroups()) {
+      items.add('groups', <div className="Form-group EditUserModal-groups">
+        <label>{app.translator.trans('core.forum.edit_user.groups_heading')}</label>
+        <div>
+          {Object.keys(this.groups)
+            .map(id => app.store.getById('groups', id))
+            .map(group => (
+              <label className="checkbox">
+                <input type="checkbox"
                      bidi={this.groups[group.id()]}
                      disabled={this.props.user.id() === '1' && group.id() === Group.ADMINISTRATOR_ID} />
-              {GroupBadge.component({group, label: ''})} {group.nameSingular()}
-            </label>
-          ))}
-      </div>
-    </div>, 10);
+                {GroupBadge.component({group, label: ''})} {group.nameSingular()}
+              </label>
+            ))}
+        </div>
+      </div>, 10);
+    }
 
     items.add('submit', <div className="Form-group">
       {Button.component({
